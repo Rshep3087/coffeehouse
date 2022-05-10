@@ -1,0 +1,8 @@
+# editor
+.vscode
+
+# binary
+coffeehouse
+
+# env vars
+*.env
