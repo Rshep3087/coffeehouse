@@ -6,3 +6,19 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - 8080:8080
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: coffeehousedb
+    ports:
+      - 5432:5432
+    volumes:
+      - coffeehouse:/var/lib/postgresql/data
+
+volumes:
+  coffeehouse:
+    name: coffeehouse
