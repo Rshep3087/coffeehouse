@@ -40,8 +40,7 @@ func run(log *zap.SugaredLogger) error {
 		dbTLS      = fs.Bool("db-tls", false, "diable TLS")
 	)
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("config parse: %w", err)
 	}
 
 	// print config
