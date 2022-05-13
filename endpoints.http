@@ -10,3 +10,7 @@ content-type: application/json
     "water_weight": 500.0,
     "water_unit": "g"
 }
+
+### Get single recipe
+
+GET http://localhost:8080/v1/recipes/1 HTTP/1.1
