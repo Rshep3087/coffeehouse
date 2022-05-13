@@ -4,10 +4,14 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rshep3087/coffeehouse/postgres"
+	"go.uber.org/zap"
 )
 
 type server struct {
-	router *httprouter.Router
+	router  *httprouter.Router
+	log     *zap.SugaredLogger
+	queries *postgres.Queries
 }
 
 func newServer() *server {

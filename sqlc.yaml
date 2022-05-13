@@ -1,0 +1,8 @@
+version: 1
+packages:
+  - path: "postgres"
+    name: "postgres"
+    queries: "./sql/query/"
+    schema: "./sql/schema/"
+    engine: "postgresql"
+    emit_json_tags: true

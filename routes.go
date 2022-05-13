@@ -1,16 +1,52 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/rshep3087/coffeehouse/postgres"
 )
 
 func (s *server) routes() {
 	s.router.HandlerFunc(http.MethodGet, "/health", s.health())
+	s.router.HandlerFunc(http.MethodPost, "/v1/recipes", s.handleCreateRecipe())
 }
 
 func (s *server) health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "healthy")
+	}
+}
+
+func (s *server) handleCreateRecipe() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var recip postgres.CreateRecipeParams
+		if err := json.NewDecoder(r.Body).Decode(&recip); err != nil {
+			http.Error(w, "invalid json body", http.StatusBadRequest)
+			return
+		}
+
+		log := s.log.With(
+			"method", recip.BrewMethod,
+			"recipe_name", recip.RecipeName,
+		)
+
+		log.Info("adding recipe")
+
+		newRecipe, err := s.queries.CreateRecipe(r.Context(), recip)
+		if err != nil {
+			s.log.Error(err)
+			http.Error(w, "error adding recipe", http.StatusInternalServerError)
+			return
+		}
+
+		log.Info("recipe added")
+
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(newRecipe); err != nil {
+			return
+		}
 	}
 }

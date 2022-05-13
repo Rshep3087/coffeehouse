@@ -1,0 +1,12 @@
+POST http://localhost:8080/v1/recipes HTTP/1.1
+content-type: application/json
+
+{
+    "recipe_name": "sample",
+    "brew_method": "chemex",
+    "coffee_weight": 20.0,
+    "weight_unit": "g",
+    "grind_size": 21,
+    "water_weight": 500.0,
+    "water_unit": "g"
+}
