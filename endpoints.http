@@ -1,3 +1,5 @@
+### Create single recipe
+
 POST http://localhost:8080/v1/recipes HTTP/1.1
 content-type: application/json
 
@@ -14,3 +16,7 @@ content-type: application/json
 ### Get single recipe
 
 GET http://localhost:8080/v1/recipes/1 HTTP/1.1
+
+### Get recipes
+
+GET http://localhost:8080/v1/recipes HTTP/1.1

@@ -14,6 +14,7 @@ func (s *server) routes() {
 	s.router.HandlerFunc(http.MethodGet, "/health", s.health())
 	s.router.HandlerFunc(http.MethodPost, "/v1/recipes", s.handleCreateRecipe())
 	s.router.HandlerFunc(http.MethodGet, "/v1/recipes/:id", s.handleGetRecipe())
+	s.router.HandlerFunc(http.MethodGet, "/v1/recipes", s.handleGetRecipes())
 }
 
 func (s *server) health() http.HandlerFunc {
@@ -84,6 +85,27 @@ func (s *server) handleGetRecipe() http.HandlerFunc {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(recipe); err != nil {
+			return
+		}
+	}
+}
+
+func (s *server) handleGetRecipes() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.log.Info("getting recipes")
+
+		recipes, err := s.queries.ListRecipes(r.Context())
+		if err != nil {
+			s.log.Error(err)
+			http.Error(w, "error getting recipes", http.StatusInternalServerError)
+			return
+		}
+
+		s.log.Info("recipes got")
+
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(recipes); err != nil {
 			return
 		}
 	}
