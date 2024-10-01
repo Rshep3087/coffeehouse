@@ -25,9 +25,9 @@ func (s *server) health() http.HandlerFunc {
 
 func (s *server) handleCreateRecipe() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var recip postgres.CreateRecipeParams
-		if err := json.NewDecoder(r.Body).Decode(&recip); err != nil {
-			http.Error(w, "invalid json body", http.StatusBadRequest)
+		recip, err := decode[postgres.CreateRecipeParams](r)
+		if err != nil {
+			http.Error(w, "error decoding recipe", http.StatusBadRequest)
 			return
 		}
 
@@ -60,10 +60,9 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 		}
 
 		log.Info("recipe added")
-
-		w.Header().Set("Content-type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(newRecipe); err != nil {
+		if err = encode(w, http.StatusCreated, newRecipe); err != nil {
+			log.Error(err)
+			http.Error(w, "error encoding response", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -94,11 +93,11 @@ func (s *server) handleGetRecipe() http.HandlerFunc {
 			return
 		}
 
-		log.Info("recipe got")
+		log.Info("recipe got", "recipe_name", recipe.RecipeName)
 
-		w.Header().Set("Content-type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(recipe); err != nil {
+		if err = encode(w, http.StatusOK, recipe); err != nil {
+			log.Error(err)
+			http.Error(w, "error encoding response", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -117,9 +116,9 @@ func (s *server) handleGetRecipes() http.HandlerFunc {
 
 		s.log.Info("recipes got")
 
-		w.Header().Set("Content-type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(recipes); err != nil {
+		if err := encode(w, http.StatusOK, recipes); err != nil {
+			s.log.Error(err)
+			http.Error(w, "error encoding response", http.StatusInternalServerError)
 			return
 		}
 	}
