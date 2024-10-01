@@ -45,6 +45,20 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 			return
 		}
 
+		// publish event that a new recipe was added
+		recipeJSON, err := json.Marshal(newRecipe)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "error marshaling new recipe", http.StatusInternalServerError)
+			return
+		}
+
+		if err := s.pubsub.Publish("recipe.new", recipeJSON); err != nil {
+			log.Error(err)
+			http.Error(w, "error publishing new recipe event", http.StatusInternalServerError)
+			return
+		}
+
 		log.Info("recipe added")
 
 		w.Header().Set("Content-type", "application/json")

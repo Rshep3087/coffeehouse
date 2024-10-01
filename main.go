@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/nats-io/nats.go"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/rshep3087/coffeehouse/database"
 	"github.com/rshep3087/coffeehouse/logger"
@@ -19,7 +20,12 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	defer log.Sync()
+
+	defer func() {
+		if err := log.Sync(); err != nil {
+			fmt.Println("Error syncing log:", err)
+		}
+	}()
 
 	if err := run(log); err != nil {
 		log.Errorw("startup", "ERROR", err)
@@ -51,9 +57,15 @@ func run(log *zap.SugaredLogger) error {
 		*dbHost,
 		*dbTLS,
 	)
+
+	nc, err := nats.Connect(nats.DefaultURL)
+	if err != nil {
+		return fmt.Errorf("nats connect: %w", err)
+	}
+
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// setup server
-	s := newServer()
+	s := newServer(nc)
 	s.log = log
 
 	db, err := database.Open(database.Config{
