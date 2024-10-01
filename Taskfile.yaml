@@ -12,8 +12,10 @@ tasks:
     
   pgcli:
     desc: Connect to the PostgreSQL database
+    env:
+      PGPASSWORD: password
     cmds:
-      - pgcli -h localhost -U user -d coffeehousedb -W
+      - pgcli -h localhost -U user -d coffeehousedb -w
 
   migrate:
     desc: Run the database migrations
