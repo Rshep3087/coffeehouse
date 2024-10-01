@@ -7,4 +7,16 @@ tasks:
     env:
       DOCKER_BUILDKIT: 1
     cmds:
-      - docker-compose up -d --build && docker logs --follow coffeehouse_coffeehouse_1 |& jq
+      - docker-compose up -d --build && docker logs --follow coffeehouse_coffeehouse_1
+    
+  pgcli:
+    cmds:
+      - pgcli -h localhost -U user -d coffeehousedb -W
+
+  migrate:
+    cmds:
+      - migrate -source file://./sql/schema -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
+
+  run:
+    cmds:
+      - COFFEEHOUSE_DB_USER=user COFFEEHOUSE_DB_PASSWORD=password go run . --db-tls false
