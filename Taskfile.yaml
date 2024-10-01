@@ -4,19 +4,23 @@ version: '3'
 
 tasks:
   local-dev:
+    desc: Run the server with docker-composes
     env:
       DOCKER_BUILDKIT: 1
     cmds:
       - docker-compose up -d --build && docker logs --follow coffeehouse_coffeehouse_1
     
   pgcli:
+    desc: Connect to the PostgreSQL database
     cmds:
       - pgcli -h localhost -U user -d coffeehousedb -W
 
   migrate:
+    desc: Run the database migrations
     cmds:
       - migrate -source file://./sql/schema -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
 
   run:
+    desc: Run the server application
     cmds:
       - COFFEEHOUSE_DB_USER=user COFFEEHOUSE_DB_PASSWORD=password go run . --db-tls false
