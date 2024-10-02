@@ -48,6 +48,7 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 		dbHost     = fs.String("db-host", "localhost:5432", "database host")
 		dbName     = fs.String("db-name", "coffeehousedb", "database name")
 		dbTLS      = fs.Bool("db-tls", false, "diable TLS")
+		natsURL    = fs.String("nats-url", nats.DefaultURL, "nats url")
 	)
 	if err := ff.Parse(fs, args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
 		return fmt.Errorf("config parse: %w", err)
@@ -55,14 +56,15 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 
 	// print config
 	log.Infof(
-		"listen addr %s, db name %s, db host %s, disable tls %t\n",
+		"listen addr %s, db name %s, db host %s, disable tls %t nats url %s",
 		*listenAddr,
 		*dbName,
 		*dbHost,
 		*dbTLS,
+		*natsURL,
 	)
 
-	nc, err := nats.Connect(nats.DefaultURL)
+	nc, err := nats.Connect(*natsURL)
 	if err != nil {
 		return fmt.Errorf("nats connect: %w", err)
 	}
