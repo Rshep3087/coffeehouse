@@ -56,6 +56,9 @@ func TestHandleGetRecipe(t *testing.T) {
 			GetRecipeFunc: func(ctx context.Context, id int64) (*postgres.Recipe, error) {
 				return nil, cache.ErrCacheMiss
 			},
+			SetRecipeFunc: func(ctx context.Context, id int64, recipe *postgres.Recipe) error {
+				return nil
+			},
 		}
 
 		s := newServer(psMock, cacheMock)

@@ -104,6 +104,11 @@ func (s *server) handleGetRecipe() http.HandlerFunc {
 
 		log.Info("recipe got", "recipe_name", recipe.RecipeName)
 
+		log.Info("setting cache")
+		if err := s.cacher.SetRecipe(r.Context(), int64(rid), &recipe); err != nil {
+			log.Error(err)
+		}
+
 		if err = encode(w, http.StatusOK, recipe); err != nil {
 			log.Error(err)
 			http.Error(w, "error encoding response", http.StatusInternalServerError)
