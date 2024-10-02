@@ -49,14 +49,11 @@ spec:
                   name: docker-env
           image: ghcr.io/rshep3087/coffeehouse:latest
           livenessProbe:
-            exec:
-              command:
-                - curl
-                - -f
-                - http://localhost:8080/health
-            failureThreshold: 3
-            periodSeconds: 30
-            timeoutSeconds: 10
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
           name: coffeehouse
           ports:
             - containerPort: 8080
