@@ -47,6 +47,11 @@ spec:
                 configMapKeyRef:
                   key: COFFEEHOUSE_NATS_URL
                   name: docker-env
+            - name: COFFEEHOUSE_REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: COFFEEHOUSE_REDIS_URL
+                  name: docker-env
           image: ghcr.io/rshep3087/coffeehouse:latest
           livenessProbe:
             httpGet:
