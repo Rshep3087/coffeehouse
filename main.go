@@ -11,6 +11,8 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/peterbourgon/ff/v3"
+	redisClient "github.com/redis/go-redis/v9"
+	"github.com/rshep3087/coffeehouse/cache/redis"
 	"github.com/rshep3087/coffeehouse/database"
 	"github.com/rshep3087/coffeehouse/logger"
 	"github.com/rshep3087/coffeehouse/postgres"
@@ -49,6 +51,7 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 		dbName     = fs.String("db-name", "coffeehousedb", "database name")
 		dbTLS      = fs.Bool("db-tls", false, "diable TLS")
 		natsURL    = fs.String("nats-url", nats.DefaultURL, "nats url")
+		redisURL   = fs.String("redis-url", "localhost:6379", "redis url")
 	)
 	if err := ff.Parse(fs, args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
 		return fmt.Errorf("config parse: %w", err)
@@ -72,7 +75,9 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// setup server
-	s := newServer(nc)
+	rc := redisClient.NewClient(&redisClient.Options{Addr: *redisURL})
+
+	s := newServer(nc, redis.New(rc))
 	s.log = log
 
 	db, err := database.Open(database.Config{

@@ -11,6 +11,7 @@ import (
 
 	"github.com/peterldowns/pgtestdb"
 	"github.com/peterldowns/pgtestdb/migrators/golangmigrator"
+	"github.com/rshep3087/coffeehouse/cache"
 	"github.com/rshep3087/coffeehouse/postgres"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -50,9 +51,14 @@ func TestHandleGetRecipe(t *testing.T) {
 		db := NewDB(t)
 		defer db.Close()
 
-		psmock := &PubSubMock{}
+		psMock := &PubSubMock{}
+		cacheMock := &cache.RecipeCacherMock{
+			GetRecipeFunc: func(ctx context.Context, id int64) (*postgres.Recipe, error) {
+				return nil, cache.ErrCacheMiss
+			},
+		}
 
-		s := newServer(psmock)
+		s := newServer(psMock, cacheMock)
 		s.queries = postgres.New(db)
 		s.log = log
 

@@ -73,9 +73,7 @@ func (s *server) handleGetRecipe() http.HandlerFunc {
 		params := httprouter.ParamsFromContext(r.Context())
 		recipeID := params.ByName("id")
 
-		log := s.log.With(
-			"id", recipeID,
-		)
+		log := s.log.With("id", recipeID)
 
 		rid, err := strconv.Atoi(recipeID)
 		if err != nil {
@@ -84,8 +82,19 @@ func (s *server) handleGetRecipe() http.HandlerFunc {
 			return
 		}
 
-		log.Info("getting recipe")
+		log.Info("checking cache")
+		cachedRecipe, err := s.cacher.GetRecipe(r.Context(), int64(rid))
+		if err == nil && cachedRecipe != nil {
+			log.Info("cache hit")
+			if err = encode(w, http.StatusOK, cachedRecipe); err != nil {
+				log.Error(err)
+				http.Error(w, "error encoding response", http.StatusInternalServerError)
+				return
+			}
+			return
+		}
 
+		log.Info("getting recipe")
 		recipe, err := s.queries.GetRecipe(r.Context(), int64(rid))
 		if err != nil {
 			log.Error(err)
