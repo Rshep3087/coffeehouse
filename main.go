@@ -59,12 +59,13 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 
 	// print config
 	log.Infof(
-		"listen addr %s, db name %s, db host %s, disable tls %t nats url %s",
+		"listen addr %s, db name %s, db host %s, disable tls %t nats url %s redis url %s",
 		*listenAddr,
 		*dbName,
 		*dbHost,
 		*dbTLS,
 		*natsURL,
+		*redisURL,
 	)
 
 	nc, err := nats.Connect(*natsURL)
