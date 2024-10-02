@@ -26,3 +26,8 @@ tasks:
     desc: Run the server application
     cmds:
       - COFFEEHOUSE_DB_USER=user COFFEEHOUSE_DB_PASSWORD=password go run . --db-tls false
+
+  kompose:
+    desc: Convert docker-compose to kubernetes manifests
+    cmds:
+      - kompose convert -o k8s 

@@ -34,6 +34,11 @@ services:
     ports:
       - 4222:4222
 
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+
 volumes:
   coffeehouse:
     name: coffeehouse

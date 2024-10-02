@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rshep3087/coffeehouse/cache"
 	"github.com/rshep3087/coffeehouse/postgres"
 	"go.uber.org/zap"
 )
@@ -19,12 +20,14 @@ type server struct {
 	log     *zap.SugaredLogger
 	queries *postgres.Queries
 	pubsub  PubSub
+	cacher  cache.RecipeCacher
 }
 
-func newServer(ps PubSub) *server {
+func newServer(ps PubSub, cacher cache.RecipeCacher) *server {
 	s := &server{
 		router: httprouter.New(),
 		pubsub: ps,
+		cacher: cacher,
 	}
 	s.routes()
 	return s
