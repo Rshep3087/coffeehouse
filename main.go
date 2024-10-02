@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/nats-io/nats.go"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/rshep3087/coffeehouse/database"
 	"github.com/rshep3087/coffeehouse/logger"
@@ -14,20 +18,26 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	log, err := logger.NewLogger("coffeehouse")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	defer log.Sync()
 
-	if err := run(log); err != nil {
+	defer func() {
+		if err := log.Sync(); err != nil {
+			fmt.Println("Error syncing log:", err)
+		}
+	}()
+
+	if err := run(ctx, os.Args, log); err != nil {
 		log.Errorw("startup", "ERROR", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *zap.SugaredLogger) error {
+func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// configuration
 	fs := flag.NewFlagSet("coffeehouse", flag.ContinueOnError)
@@ -38,22 +48,31 @@ func run(log *zap.SugaredLogger) error {
 		dbHost     = fs.String("db-host", "localhost:5432", "database host")
 		dbName     = fs.String("db-name", "coffeehousedb", "database name")
 		dbTLS      = fs.Bool("db-tls", false, "diable TLS")
+		natsURL    = fs.String("nats-url", nats.DefaultURL, "nats url")
 	)
-	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
+	if err := ff.Parse(fs, args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
 		return fmt.Errorf("config parse: %w", err)
 	}
 
 	// print config
 	log.Infof(
-		"listen addr %s, db name %s, db host %s, disable tls %t\n",
+		"listen addr %s, db name %s, db host %s, disable tls %t nats url %s",
 		*listenAddr,
 		*dbName,
 		*dbHost,
 		*dbTLS,
+		*natsURL,
 	)
+
+	nc, err := nats.Connect(*natsURL)
+	if err != nil {
+		return fmt.Errorf("nats connect: %w", err)
+	}
+	defer nc.Close()
+
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// setup server
-	s := newServer()
+	s := newServer(nc)
 	s.log = log
 
 	db, err := database.Open(database.Config{
@@ -75,10 +94,36 @@ func run(log *zap.SugaredLogger) error {
 	queries := postgres.New(db)
 	s.queries = queries
 
-	log.Info("server starting")
-	err = http.ListenAndServe(*listenAddr, s)
+	stop := make(chan os.Signal, 1)
+	defer close(stop)
+
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	srv := &http.Server{
+		Addr:    *listenAddr,
+		Handler: s,
+	}
+
+	go func() {
+		log.Info("server starting")
+		err = srv.ListenAndServe()
+		if err != nil {
+			log.Errorw("server error", "ERROR", err)
+			stop <- syscall.SIGTERM
+		}
+	}()
+
+	<-stop
+
+	log.Info("server stopping")
+
+	shutdownCtx, cancel := context.WithTimeout(ctx, 5)
+	defer cancel()
+
+	err = srv.Shutdown(shutdownCtx)
+
 	if err != nil {
-		return err
+		log.Errorw("server shutdown error", "ERROR", err)
 	}
 
 	return nil

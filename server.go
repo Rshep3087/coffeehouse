@@ -8,15 +8,23 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate moq -out pubsub_moq_test.go . PubSub
+type PubSub interface {
+	// Publish publishes a message to a topic without waiting for a response
+	Publish(topic string, data []byte) error
+}
+
 type server struct {
 	router  *httprouter.Router
 	log     *zap.SugaredLogger
 	queries *postgres.Queries
+	pubsub  PubSub
 }
 
-func newServer() *server {
+func newServer(ps PubSub) *server {
 	s := &server{
 		router: httprouter.New(),
+		pubsub: ps,
 	}
 	s.routes()
 	return s

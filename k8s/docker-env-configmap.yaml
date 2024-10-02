@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  COFFEEHOUSE_DB_HOST: db
+  COFFEEHOUSE_DB_PASSWORD: password
+  COFFEEHOUSE_DB_TLS: "true"
+  COFFEEHOUSE_LISTEN_ADDR: 0.0.0.0:8080
+  COFFEEHOUSE_NATS_URL: nats://nats:4222
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: coffeehouse-docker-env
+  name: docker-env

@@ -1,9 +1,19 @@
 services:
   coffeehouse:
     image: coffeehouse
+    env_file:
+      - docker.env
+    depends_on:
+      - db
+      - nats
     build:
       context: .
       dockerfile: ./Dockerfile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     ports:
       - 8080:8080
 
@@ -18,6 +28,11 @@ services:
       - 5432:5432
     volumes:
       - coffeehouse:/var/lib/postgresql/data
+  
+  nats:
+    image: nats
+    ports:
+      - 4222:4222
 
 volumes:
   coffeehouse:
