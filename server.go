@@ -23,8 +23,15 @@ type server struct {
 	cacher  cache.RecipeCacher
 }
 
-func newServer(ps PubSub, cacher cache.RecipeCacher) *server {
+func newServer(log *zap.SugaredLogger, ps PubSub, cacher cache.RecipeCacher) *server {
+	router := httprouter.New()
+	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, i interface{}) {
+		log.Errorw("recovered from panic", "error", i)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}
+
 	s := &server{
+		log:    log,
 		router: httprouter.New(),
 		pubsub: ps,
 		cacher: cacher,

@@ -12,9 +12,9 @@ import (
 
 func (s *server) routes() {
 	s.router.HandlerFunc(http.MethodGet, "/health", s.health())
-	s.router.HandlerFunc(http.MethodPost, "/v1/recipes", s.handleCreateRecipe())
-	s.router.HandlerFunc(http.MethodGet, "/v1/recipes/:id", s.handleGetRecipe())
-	s.router.HandlerFunc(http.MethodGet, "/v1/recipes", s.handleGetRecipes())
+	s.router.HandlerFunc(http.MethodPost, "/v1/recipes", loggingmw(s.log, s.handleCreateRecipe()))
+	s.router.HandlerFunc(http.MethodGet, "/v1/recipes/:id", loggingmw(s.log, s.handleGetRecipe()))
+	s.router.HandlerFunc(http.MethodGet, "/v1/recipes", loggingmw(s.log, s.handleGetRecipes()))
 }
 
 func (s *server) health() http.HandlerFunc {

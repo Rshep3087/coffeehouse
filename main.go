@@ -78,8 +78,7 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	// setup server
 	rc := redisClient.NewClient(&redisClient.Options{Addr: *redisURL})
 
-	s := newServer(nc, redis.New(rc))
-	s.log = log
+	s := newServer(log, nc, redis.New(rc))
 
 	db, err := database.Open(database.Config{
 		User:       *dbUser,
