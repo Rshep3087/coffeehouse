@@ -5,16 +5,24 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rshep3087/coffeehouse/postgres"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *server) routes() {
+	// Health check route
 	s.router.HandlerFunc(http.MethodGet, "/health", s.health())
+
+	// Recipe routes
 	s.router.HandlerFunc(http.MethodPost, "/v1/recipes", loggingmw(s.log, s.handleCreateRecipe()))
 	s.router.HandlerFunc(http.MethodGet, "/v1/recipes/:id", loggingmw(s.log, s.handleGetRecipe()))
 	s.router.HandlerFunc(http.MethodGet, "/v1/recipes", loggingmw(s.log, s.handleGetRecipes()))
+
+	// User routes
+	s.router.HandlerFunc(http.MethodPost, "/v1/users", loggingmw(s.log, s.handleCreateUser()))
 }
 
 func (s *server) health() http.HandlerFunc {
@@ -132,6 +140,72 @@ func (s *server) handleGetRecipes() http.HandlerFunc {
 
 		if err := encode(w, http.StatusOK, recipes); err != nil {
 			s.log.Error(err)
+			http.Error(w, "error encoding response", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func hashPassword(password []byte) ([]byte, error) {
+	return bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+}
+
+func (s *server) handleCreateUser() http.HandlerFunc {
+	// req is a struct that represents the JSON body of a POST request to create a user
+	type req struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password []byte `json:"password"`
+	}
+
+	// resp is a struct that represents the JSON response to a POST request to create a user
+	type resp struct {
+		Name      string    `json:"name"`
+		Email     string    `json:"email"`
+		ID        int32     `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		Version   int32     `json:"version"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := decode[req](r)
+		if err != nil {
+			http.Error(w, "error decoding user", http.StatusBadRequest)
+			return
+		}
+
+		log := s.log.With("name", user.Name, "email", user.Email)
+
+		log.Info("creating user")
+
+		ha, err := hashPassword(user.Password)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "error hashing password", http.StatusInternalServerError)
+			return
+		}
+
+		newUser, err := s.queries.CreateUser(r.Context(), postgres.CreateUserParams{
+			Name:         user.Name,
+			Email:        user.Email,
+			PasswordHash: ha,
+		})
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "error creating user", http.StatusInternalServerError)
+			return
+		}
+
+		log.Info("user created")
+
+		if err = encode(w, http.StatusCreated, resp{
+			Name:      user.Name,
+			Email:     user.Email,
+			ID:        newUser.ID,
+			CreatedAt: newUser.CreatedAt,
+			Version:   newUser.Version,
+		}); err != nil {
+			log.Error(err)
 			http.Error(w, "error encoding response", http.StatusInternalServerError)
 			return
 		}
