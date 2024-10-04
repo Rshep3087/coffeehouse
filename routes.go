@@ -23,6 +23,7 @@ func (s *server) routes() {
 
 	// User routes
 	s.router.HandlerFunc(http.MethodPost, "/v1/users", loggingmw(s.log, s.handleCreateUser()))
+	s.router.HandlerFunc(http.MethodGet, "/v1/users/:id", loggingmw(s.log, s.handleGetUser()))
 
 	// User recipe routes
 	s.router.HandlerFunc(http.MethodPost, "/v1/save-recipe", loggingmw(s.log, s.handleSaveRecipe()))
@@ -207,6 +208,59 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 			ID:        newUser.ID,
 			CreatedAt: newUser.CreatedAt,
 			Version:   newUser.Version,
+		}); err != nil {
+			log.Error(err)
+			http.Error(w, "error encoding response", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func (s *server) handleGetUser() http.HandlerFunc {
+	type resp struct {
+		Name    string                       `json:"name"`
+		Email   string                       `json:"email"`
+		ID      int32                        `json:"id"`
+		Recipes []postgres.GetUserRecipesRow `json:"recipes"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := httprouter.ParamsFromContext(r.Context())
+		userID := params.ByName("id")
+
+		log := s.log.With("id", userID)
+
+		uid, err := strconv.Atoi(userID)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "invalid id param", http.StatusBadRequest)
+			return
+		}
+
+		log.Info("getting user")
+		user, err := s.queries.GetUserById(r.Context(), int32(uid))
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "error getting user", http.StatusInternalServerError)
+			return
+		}
+
+		log.Info("user got", "name", user.Name)
+
+		// get user's saved recipes
+		log.Info("getting user's saved recipes")
+		recipes, err := s.queries.GetUserRecipes(r.Context(), user.ID)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "error getting user's saved recipes", http.StatusInternalServerError)
+			return
+		}
+		log.Info("user's saved recipes got")
+
+		if err = encode(w, http.StatusOK, resp{
+			Name:    user.Name,
+			Email:   user.Email,
+			ID:      user.ID,
+			Recipes: recipes,
 		}); err != nil {
 			log.Error(err)
 			http.Error(w, "error encoding response", http.StatusInternalServerError)

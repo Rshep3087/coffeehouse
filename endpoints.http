@@ -40,5 +40,9 @@ content-type: application/json
 
 {
     "user_id": 1,
-    "recipe_id": 1
+    "recipe_id": 4
 }
+
+### Get user with saved recipes
+
+GET http://localhost:8080/v1/users/1 HTTP/1.1
