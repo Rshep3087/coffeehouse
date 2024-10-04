@@ -20,3 +20,19 @@ INSERT INTO public.users (
 ) VALUES (
   $1, $2, $3
 ) RETURNING id, created_at, version;
+
+-- name: SaveRecipe :exec
+INSERT INTO public.saved_recipes (
+    user_id, recipe_id
+) VALUES (
+  $1, $2
+);
+
+-- name: GetUserById :one
+SELECT * FROM public.users
+WHERE id = $1 LIMIT 1;
+
+-- name: GetUserRecipes :many
+SELECT * FROM public.recipes
+JOIN public.saved_recipes ON public.recipes.id = public.saved_recipes.recipe_id
+WHERE public.saved_recipes.user_id = $1;

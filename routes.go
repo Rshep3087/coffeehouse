@@ -23,6 +23,9 @@ func (s *server) routes() {
 
 	// User routes
 	s.router.HandlerFunc(http.MethodPost, "/v1/users", loggingmw(s.log, s.handleCreateUser()))
+
+	// User recipe routes
+	s.router.HandlerFunc(http.MethodPost, "/v1/save-recipe", loggingmw(s.log, s.handleSaveRecipe()))
 }
 
 func (s *server) health() http.HandlerFunc {
@@ -209,5 +212,37 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 			http.Error(w, "error encoding response", http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func (s *server) handleSaveRecipe() http.HandlerFunc {
+	type req struct {
+		UserID   int32 `json:"user_id"`
+		RecipeID int32 `json:"recipe_id"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		data, err := decode[req](r)
+		if err != nil {
+			http.Error(w, "error decoding request", http.StatusBadRequest)
+			return
+		}
+
+		log := s.log.With("user_id", data.UserID, "recipe_id", data.RecipeID)
+
+		log.Info("saving recipe")
+
+		err = s.queries.SaveRecipe(r.Context(), postgres.SaveRecipeParams{
+			UserID:   data.UserID,
+			RecipeID: data.RecipeID,
+		})
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "error saving recipe", http.StatusInternalServerError)
+			return
+		}
+
+		log.Info("recipe saved")
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
