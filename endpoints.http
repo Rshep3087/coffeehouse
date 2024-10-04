@@ -20,3 +20,29 @@ GET http://localhost:8080/v1/recipes/1 HTTP/1.1
 ### Get recipes
 
 GET http://localhost:8080/v1/recipes HTTP/1.1
+
+### Create user
+
+POST http://localhost:8080/v1/users HTTP/1.1
+content-type: application/json
+
+{
+    "name": "sample",
+    "email": "sample@email.com",
+    "password": "password"
+}
+
+
+### Save recipe to user
+
+POST http://localhost:8080/v1/save-recipe HTTP/1.1
+content-type: application/json
+
+{
+    "user_id": 1,
+    "recipe_id": 4
+}
+
+### Get user with saved recipes
+
+GET http://localhost:8080/v1/users/1 HTTP/1.1

@@ -1,8 +1,11 @@
-version: 1
-packages:
-  - path: "postgres"
-    name: "postgres"
+version: "2"
+sql:
+  - engine: "postgresql"
     queries: "./sql/query/"
     schema: "./sql/schema/"
-    engine: "postgresql"
-    emit_json_tags: true
+    gen:
+      go:
+        package: "postgres"
+        out: "postgres"
+        sql_package: "database/sql"
+        emit_json_tags: true
