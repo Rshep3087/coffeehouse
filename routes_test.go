@@ -61,9 +61,8 @@ func TestHandleGetRecipe(t *testing.T) {
 			},
 		}
 
-		s := newServer(psMock, cacheMock)
+		s := newServer(log, psMock, cacheMock)
 		s.queries = postgres.New(db)
-		s.log = log
 
 		// create a recipe
 		_, err := s.queries.CreateRecipe(ctx, postgres.CreateRecipeParams{
