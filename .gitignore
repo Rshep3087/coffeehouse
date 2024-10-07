@@ -3,6 +3,7 @@
 
 # binary
 coffeehouse
+digitalsign
 
 # env vars
 *.env
