@@ -8,10 +8,22 @@ The Taskfile is used to run common tasks that are used in development. To see al
 
 ### Running the Application
 
+Create a file called `docker.env` in the root of the project with the following content:
+```bash
+COFFEEHOUSE_DB_PASSWORD=password
+COFFEEHOUSE_DB_HOST=db
+COFFEEHOUSE_DB_TLS=true
+COFFEEHOUSE_NATS_URL=nats://nats:4222
+COFFEEHOUSE_REDIS_URL=redis:6379
+COFFEEHOUSE_LISTEN_ADDR=0.0.0.0:8080
+```
+
 To run the application and see log output, run the following command:
 ```bash
 task local-dev
 ```
+
+The server should now be running and listening on port 8080.
 
 ### Sending requests to the server
 
@@ -96,8 +108,15 @@ curl --request GET \
 
 ### Running the Command Line Digital Sign
 
-The command line digital sign subscribes to the NATS topic and prints the message to the console. To run the command line digital sign, run the following command:
+![digitalsign](images/digitalsign.png)
+
+The command line digital sign subscribes 
+to the NATS topic and prints the message to the console. To run the command line digital sign, run the following command:
 ```bash
+task digitalsign
+```
+
+Create a new recipe and the command line digital sign will display the recipe in the table.
 
 ## Features
 

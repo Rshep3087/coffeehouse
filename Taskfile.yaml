@@ -1,26 +1,41 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 tasks:
+  digitalsign:
+    desc: Runs the digital sign TUI application
+    cmds:
+      - go build -o digitalsign ./cmd/digitalsign && ./digitalsign
+
+  kompose:
+    desc: Convert docker-compose to kubernetes manifests
+    cmds:
+      - kompose convert -o k8s
+
   local-dev:
     desc: Run the server with docker-composes
     env:
       DOCKER_BUILDKIT: 1
     cmds:
       - docker compose up -d --build && docker logs --follow coffeehouse-coffeehouse-1
-    
+
+  migrate:
+    desc: Run the database migrations
+    cmds:
+      - migrate -source file://./sql/schema -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
+
+  new_migration:
+    desc: Create a new migration
+    cmds:
+      - migrate create -ext sql -dir sql/schema -seq {{.CLI_ARGS}}
+
   pgcli:
     desc: Connect to the PostgreSQL database
     env:
       PGPASSWORD: password
     cmds:
       - pgcli -h localhost -U user -d coffeehousedb -w
-
-  migrate:
-    desc: Run the database migrations
-    cmds:
-      - migrate -source file://./sql/schema -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
 
   run:
     desc: Run the server application
@@ -29,13 +44,3 @@ tasks:
       COFFEEHOUSE_DB_PASSWORD: password
     cmds:
       - go run . --db-tls false
-
-  kompose:
-    desc: Convert docker-compose to kubernetes manifests
-    cmds:
-      - kompose convert -o k8s 
-
-  new_migration:
-    desc: Create a new migration
-    cmds:
-      - migrate create -ext sql -dir sql/schema -seq {{.CLI_ARGS}}
