@@ -4,11 +4,21 @@ Coffeehouse is an example/reference service for keeping records of your favorite
 
 ## Common Tasks
 
-The Taskfile is used to run common tasks that are used in development. To see all the tasks available, run `task -l`.
+[Task](https://taskfile.dev/) is used to run common tasks that are used in development. To see all the tasks available, run `task -l`.
+
+[Install Task](https://taskfile.dev/installation/)
+
+If you do not have Task, commands can be viewed from the [Taskfile](Taskfile.yaml)
 
 ### Running the Application
 
 Create a file called `docker.env` in the root of the project with the following content:
+```bash
+touch docker.env
+```
+
+`docker.env` file contents
+
 ```bash
 COFFEEHOUSE_DB_PASSWORD=password
 COFFEEHOUSE_DB_HOST=db
