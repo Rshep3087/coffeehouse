@@ -29,7 +29,7 @@ The server should now be running and listening on port 8080.
 
 The file `endpoints.http` contains example requests that can be sent to the server. You can use the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension in Visual Studio Code to send the requests.
 
-### Sequence Digram for common use case
+### Sequence diagram for common use case
 
 ```mermaid
 sequenceDiagram
