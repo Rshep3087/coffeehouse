@@ -2,7 +2,7 @@
 
 Coffeehouse is an example/reference service for keeping records of your favorite coffee recipes.
 
-## Taskfile
+## Common Tasks
 
 The Taskfile is used to run common tasks that are used in development. To see all the tasks available, run `task -l`.
 
