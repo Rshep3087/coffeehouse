@@ -2,6 +2,105 @@
 
 Coffeehouse is an example/reference service for keeping records of your favorite coffee recipes.
 
+## Taskfile
+
+The Taskfile is used to run common tasks that are used in development. To see all the tasks available, run `task -l`.
+
+### Running the Application
+
+To run the application and see log output, run the following command:
+```bash
+task local-dev
+```
+
+### Sending requests to the server
+
+The file `endpoints.http` contains example requests that can be sent to the server. You can use the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension in Visual Studio Code to send the requests.
+
+### Sequence Digram for common use case
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CoffeehouseAPI
+    participant PostgresDB
+
+    User->>CoffeehouseAPI: Sign up with user data
+    CoffeehouseAPI->>PostgresDB: Insert user data
+    PostgresDB-->>CoffeehouseAPI: User account created
+    CoffeehouseAPI-->>User: User account created successfully
+
+    User->>CoffeehouseAPI: Create a recipe
+    CoffeehouseAPI->>PostgresDB: Insert recipe data
+    PostgresDB-->>CoffeehouseAPI: Recipe created
+    CoffeehouseAPI-->>User: Recipe created successfully
+
+    User->>CoffeehouseAPI: Get the newly created recipe
+    CoffeehouseAPI->>PostgresDB: Query for new recipe
+    PostgresDB-->>CoffeehouseAPI: Return new recipe data
+    CoffeehouseAPI-->>User: Display new recipe
+
+    User->>CoffeehouseAPI: Get a list of recipes
+    CoffeehouseAPI->>PostgresDB: Query for list of recipes
+    PostgresDB-->>CoffeehouseAPI: Return list of recipes
+    CoffeehouseAPI-->>User: Display list of recipes
+
+    User->>CoffeehouseAPI: Save recipe
+    CoffeehouseAPI->>PostgresDB: Update user saved recipes
+    PostgresDB-->>CoffeehouseAPI: Recipe saved successfully
+    CoffeehouseAPI-->>User: Recipe saved to user account
+
+    User->>CoffeehouseAPI: Get user details
+    CoffeehouseAPI->>PostgresDB: Query for user details including saved recipes
+    PostgresDB-->>CoffeehouseAPI: Return user details and saved recipes
+    CoffeehouseAPI-->>User: Display user details and saved recipes
+```
+
+#### Example curl requests
+
+Create a user
+```bash
+curl --request POST \
+  --url http://localhost:8080/v1/users \
+  --header 'content-type: application/json' \
+  --data '{"name": "sample","email": "sample@email.com","password": "password"}'
+```
+
+Create a recipe
+```bash
+curl --request POST \
+  --url http://localhost:8080/v1/recipes \
+  --header 'content-type: application/json' \
+  --data '{"recipe_name": "sample","brew_method": "chemex","coffee_weight": 20.0,"weight_unit": "g","grind_size": 21,"water_weight": 500.0,"water_unit": "g"}'
+```
+
+Get the recipe
+```bash
+curl --request GET \
+  --url http://localhost:8080/v1/recipes/1
+```
+
+Save the recipe for the user
+```bash
+curl --request POST \
+  --url http://localhost:8080/v1/save-recipe \
+  --header 'content-type: application/json' \
+  --data '{"user_id": 1,"recipe_id": 1}'
+```
+
+Get the user which will include the saved recipes
+```bash
+curl --request GET \
+  --url http://localhost:8080/v1/users/1
+```
+
+### Running the Command Line Digital Sign
+
+The command line digital sign subscribes to the NATS topic and prints the message to the console. To run the command line digital sign, run the following command:
+```bash
+
+## Features
+
 Coffeehouse includes the following features:
 - RESTful API: Example CRUD operations for a coffee recipe
 - Redis Caching: Example caching of the coffee recipe
