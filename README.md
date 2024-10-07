@@ -118,6 +118,28 @@ task digitalsign
 
 Create a new recipe and the command line digital sign will display the recipe in the table.
 
+## Kubernetes
+
+If you have a running Kubernetes cluster, you can deploy the application using the Kubernetes deployment files. The deployment files are located in the `k8s` directory.
+
+To deploy the application, run the following command:
+```bash
+kubectl apply -f k8s
+```
+
+This will create the necessary deployments, services, and secrets for the application. The application will be accessible through the service `coffeehouse`.
+
+![k9s](images/k9s.png)
+
+To access the application, you can port-forward the service to your local machine:
+```bash
+kubectl port-forward service/coffeehouse 8080:8080
+```
+
+The server should now be accessible on port 8080.
+
+The Kubernetes deployment is not meant for production use and is only for demonstration purposes.
+
 ## Features
 
 Coffeehouse includes the following features:
