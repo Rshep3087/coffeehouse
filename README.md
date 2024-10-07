@@ -29,7 +29,7 @@ The server should now be running and listening on port 8080.
 
 The file `endpoints.http` contains example requests that can be sent to the server. You can use the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension in Visual Studio Code to send the requests.
 
-### Sequence diagram for common use case
+### Sequence diagram for common workflows
 
 ```mermaid
 sequenceDiagram
@@ -69,6 +69,8 @@ sequenceDiagram
 ```
 
 #### Example curl requests
+
+The curl requests below include all calls needed to run the workflows above.
 
 Create a user
 ```bash
@@ -111,7 +113,7 @@ curl --request GET \
 ![digitalsign](images/digitalsign.png)
 
 The command line digital sign subscribes 
-to the NATS topic and prints the message to the console. To run the command line digital sign, run the following command:
+to the NATS topic and prints the recipe out. To run the command line digital sign, run the following command:
 ```bash
 task digitalsign
 ```
