@@ -143,6 +143,14 @@ This will create the necessary deployments, services, and secrets for the applic
 
 ![k9s](images/k9s.png)
 
+You will need to run the migrate task to create the database schema:
+```bash
+kubectl port-forward deployment/db 5432:5432
+
+# separate terminal
+task migrate
+```
+
 To access the application, you can port-forward the service to your local machine:
 ```bash
 kubectl port-forward service/coffeehouse 8080:8080
