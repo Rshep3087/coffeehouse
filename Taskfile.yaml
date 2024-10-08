@@ -3,6 +3,11 @@
 version: "3"
 
 tasks:
+  cleanup:
+    desc: Remove the docker containers and volumes
+    cmds:
+      - docker compose down -v
+
   digitalsign:
     desc: Runs the digital sign TUI application
     cmds:
@@ -18,12 +23,17 @@ tasks:
     env:
       DOCKER_BUILDKIT: 1
     cmds:
-      - docker compose up -d --build && docker logs --follow coffeehouse-coffeehouse-1
+      - docker compose up -d db
+      - sleep 3 # wait for the database to start
+      - task: migrate
+      - docker compose up --build -d coffeehouse nats redis
+      - sleep 1
+      - docker logs --follow coffeehouse-coffeehouse-1
 
   migrate:
-    desc: Run the database migrations
+    desc: Run the database migrations with docker
     cmds:
-      - migrate -source file://./sql/schema -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
+      - docker run -v $(pwd)/sql/schema:/migrations --network host migrate/migrate -path=/migrations/ -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
 
   new_migration:
     desc: Create a new migration
