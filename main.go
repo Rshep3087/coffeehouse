@@ -16,6 +16,7 @@ import (
 	"github.com/rshep3087/coffeehouse/database"
 	"github.com/rshep3087/coffeehouse/logger"
 	"github.com/rshep3087/coffeehouse/postgres"
+	"github.com/rshep3087/coffeehouse/web"
 	"go.uber.org/zap"
 )
 
@@ -78,7 +79,7 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	// setup server
 	rc := redisClient.NewClient(&redisClient.Options{Addr: *redisURL})
 
-	s := newServer(log, nc, redis.New(rc))
+	s := web.NewServer(log, nc, redis.New(rc))
 
 	db, err := database.Open(database.Config{
 		User:       *dbUser,
@@ -97,7 +98,7 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	}()
 
 	queries := postgres.New(db)
-	s.queries = queries
+	s.Queries = queries
 
 	stop := make(chan os.Signal, 1)
 	defer close(stop)
