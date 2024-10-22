@@ -151,6 +151,7 @@ type Recipe struct {
 	WaterUnit     string          `json:"water_unit"`
 	WaterTemp     sql.NullFloat64 `json:"water_temp"`
 	WaterTempUnit sql.NullString  `json:"water_temp_unit"`
+	UserID        int32           `json:"user_id"`
 }
 
 type SavedRecipe struct {

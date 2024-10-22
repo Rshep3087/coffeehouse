@@ -25,21 +25,31 @@ tasks:
     cmds:
       - docker compose up -d db
       - sleep 3 # wait for the database to start
-      - task: migrate
+      - task: db:migrate
       - docker compose up --build -d coffeehouse nats redis
       - sleep 1
       - docker logs --follow coffeehouse-coffeehouse-1
 
-  migrate:
+  db:migrate:
     desc: Run the database migrations with docker
     cmds:
       - docker run -v $(pwd)/sql/schema:/migrations --network host migrate/migrate -path=/migrations/ -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable up
+  
+  db:rollback:
+    desc: Rollback the database migrations
+    cmds:
+      - docker run -v $(pwd)/sql/schema:/migrations --network host migrate/migrate -path=/migrations/ -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable down 1
 
-  new_migration:
+  db:force:
+    desc: Force the database version to N
+    cmds:
+      - docker run -v $(pwd)/sql/schema:/migrations --network host migrate/migrate -path=/migrations/ -database postgres://user:password@localhost:5432/coffeehousedb?sslmode=disable force {{.CLI_ARGS}}
+
+  db:new_migration:
     desc: Create a new migration
     cmds:
       - migrate create -ext sql -dir sql/schema -seq {{.CLI_ARGS}}
-
+    
   pgcli:
     desc: Connect to the PostgreSQL database
     env:
