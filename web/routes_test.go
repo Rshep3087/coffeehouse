@@ -1,10 +1,9 @@
-package main
+package web
 
 import (
 	"bytes"
 	"context"
 	"database/sql"
-	"embed"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,19 +14,17 @@ import (
 	"github.com/peterldowns/pgtestdb/migrators/golangmigrator"
 	"github.com/rshep3087/coffeehouse/cache"
 	"github.com/rshep3087/coffeehouse/postgres"
+	chsql "github.com/rshep3087/coffeehouse/sql"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
-
-//go:embed sql/schema/*.sql
-var schemaFS embed.FS
 
 func NewDB(t *testing.T) *sql.DB {
 	t.Helper()
 
 	gm := golangmigrator.New(
-		"sql/schema",
-		golangmigrator.WithFS(schemaFS),
+		"schema",
+		golangmigrator.WithFS(chsql.SchemaFS),
 	)
 
 	conf := pgtestdb.Config{
@@ -60,11 +57,11 @@ func TestHandleCreateRecipe(t *testing.T) {
 		}
 		cacheMock := &cache.RecipeCacherMock{}
 
-		s := newServer(log, psMock, cacheMock)
-		s.queries = postgres.New(db)
+		s := NewServer(log, psMock, cacheMock)
+		s.Queries = postgres.New(db)
 
 		// create a user
-		_, err := s.queries.CreateUser(ctx, postgres.CreateUserParams{
+		_, err := s.Queries.CreateUser(ctx, postgres.CreateUserParams{
 			Name:         "test user",
 			Email:        "user@email.com",
 			PasswordHash: []byte("password"),
@@ -118,14 +115,22 @@ func TestHandleGetRecipe(t *testing.T) {
 			},
 		}
 
-		s := newServer(log, psMock, cacheMock)
-		s.queries = postgres.New(db)
+		s := NewServer(log, psMock, cacheMock)
+		s.Queries = postgres.New(db)
+
+		_, err := s.Queries.CreateUser(ctx, postgres.CreateUserParams{
+			Name:         "test user",
+			Email:        "user@email.com",
+			PasswordHash: []byte("password"),
+		})
+		require.NoError(t, err)
 
 		// create a recipe
-		_, err := s.queries.CreateRecipe(ctx, postgres.CreateRecipeParams{
+		_, err = s.Queries.CreateRecipe(ctx, postgres.CreateRecipeParams{
 			RecipeName: "test recipe",
 			BrewMethod: postgres.BrewMethodChemex,
 			WeightUnit: postgres.WeightUnitG,
+			UserID:     1,
 		})
 		require.NoError(t, err)
 
@@ -145,6 +150,7 @@ func TestHandleGetRecipe(t *testing.T) {
 			GrindSize:   0,
 			WaterWeight: 0,
 			WaterUnit:   "",
+			UserID:      1,
 		}
 		require.Equal(t, want, got)
 	})

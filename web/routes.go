@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"encoding/json"
@@ -52,7 +52,7 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 
 		log.Info("adding recipe")
 
-		newRecipe, err := s.queries.CreateRecipe(r.Context(), recip)
+		newRecipe, err := s.Queries.CreateRecipe(r.Context(), recip)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "error adding recipe", http.StatusInternalServerError)
@@ -109,7 +109,7 @@ func (s *server) handleGetRecipe() http.HandlerFunc {
 		}
 
 		log.Info("getting recipe")
-		recipe, err := s.queries.GetRecipe(r.Context(), int64(rid))
+		recipe, err := s.Queries.GetRecipe(r.Context(), int64(rid))
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "error getting recipe", http.StatusInternalServerError)
@@ -135,7 +135,7 @@ func (s *server) handleGetRecipes() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.log.Info("getting recipes")
 
-		recipes, err := s.queries.ListRecipes(r.Context())
+		recipes, err := s.Queries.ListRecipes(r.Context())
 		if err != nil {
 			s.log.Error(err)
 			http.Error(w, "error getting recipes", http.StatusInternalServerError)
@@ -191,7 +191,7 @@ func (s *server) handleCreateUser() http.HandlerFunc {
 			return
 		}
 
-		newUser, err := s.queries.CreateUser(r.Context(), postgres.CreateUserParams{
+		newUser, err := s.Queries.CreateUser(r.Context(), postgres.CreateUserParams{
 			Name:         user.Name,
 			Email:        user.Email,
 			PasswordHash: ha,
@@ -239,7 +239,7 @@ func (s *server) handleGetUser() http.HandlerFunc {
 		}
 
 		log.Info("getting user")
-		user, err := s.queries.GetUserById(r.Context(), int32(uid))
+		user, err := s.Queries.GetUserById(r.Context(), int32(uid))
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "error getting user", http.StatusInternalServerError)
@@ -250,7 +250,7 @@ func (s *server) handleGetUser() http.HandlerFunc {
 
 		// get user's saved recipes
 		log.Info("getting user's saved recipes")
-		recipes, err := s.queries.GetUserRecipes(r.Context(), user.ID)
+		recipes, err := s.Queries.GetUserRecipes(r.Context(), user.ID)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "error getting user's saved recipes", http.StatusInternalServerError)
@@ -287,7 +287,7 @@ func (s *server) handleSaveRecipe() http.HandlerFunc {
 
 		log.Info("saving recipe")
 
-		err = s.queries.SaveRecipe(r.Context(), postgres.SaveRecipeParams{
+		err = s.Queries.SaveRecipe(r.Context(), postgres.SaveRecipeParams{
 			UserID:   data.UserID,
 			RecipeID: data.RecipeID,
 		})

@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"net/http"
@@ -18,12 +18,12 @@ type PubSub interface {
 type server struct {
 	router  *httprouter.Router
 	log     *zap.SugaredLogger
-	queries *postgres.Queries
+	Queries *postgres.Queries
 	pubsub  PubSub
 	cacher  cache.RecipeCacher
 }
 
-func newServer(log *zap.SugaredLogger, ps PubSub, cacher cache.RecipeCacher) *server {
+func NewServer(log *zap.SugaredLogger, ps PubSub, cacher cache.RecipeCacher) *server {
 	router := httprouter.New()
 	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, i interface{}) {
 		log.Errorw("recovered from panic", "error", i)
