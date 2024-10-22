@@ -95,7 +95,7 @@ Create a recipe
 curl --request POST \
   --url http://localhost:8080/v1/recipes \
   --header 'content-type: application/json' \
-  --data '{"recipe_name": "sample","brew_method": "chemex","coffee_weight": 20.0,"weight_unit": "g","grind_size": 21,"water_weight": 500.0,"water_unit": "g"}'
+  --data '{"recipe_name": "sample","brew_method": "chemex","coffee_weight": 20.0,"weight_unit": "g","grind_size": 21,"water_weight": 500.0,"water_unit": "g","user_id": 1}'
 ```
 
 Get the recipe
