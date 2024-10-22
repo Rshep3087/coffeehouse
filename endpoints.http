@@ -10,7 +10,8 @@ content-type: application/json
     "weight_unit": "g",
     "grind_size": 21,
     "water_weight": 500.0,
-    "water_unit": "g"
+    "water_unit": "g",
+    "user_id": 5
 }
 
 ### Get single recipe

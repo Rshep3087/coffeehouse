@@ -39,6 +39,7 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		recip, err := decode[postgres.CreateRecipeParams](r)
 		if err != nil {
+			s.log.Error(err)
 			http.Error(w, "error decoding recipe", http.StatusBadRequest)
 			return
 		}
@@ -46,6 +47,7 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 		log := s.log.With(
 			"method", recip.BrewMethod,
 			"recipe_name", recip.RecipeName,
+			"user_id", recip.UserID,
 		)
 
 		log.Info("adding recipe")

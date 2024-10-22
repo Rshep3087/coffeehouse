@@ -13,11 +13,11 @@ import (
 
 const createRecipe = `-- name: CreateRecipe :one
 INSERT INTO public.recipes (
-    recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit
+    recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit
+RETURNING id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id
 `
 
 type CreateRecipeParams struct {
@@ -30,6 +30,7 @@ type CreateRecipeParams struct {
 	WaterUnit     string          `json:"water_unit"`
 	WaterTemp     sql.NullFloat64 `json:"water_temp"`
 	WaterTempUnit sql.NullString  `json:"water_temp_unit"`
+	UserID        int32           `json:"user_id"`
 }
 
 func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Recipe, error) {
@@ -43,6 +44,7 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		arg.WaterUnit,
 		arg.WaterTemp,
 		arg.WaterTempUnit,
+		arg.UserID,
 	)
 	var i Recipe
 	err := row.Scan(
@@ -56,6 +58,7 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		&i.WaterUnit,
 		&i.WaterTemp,
 		&i.WaterTempUnit,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -88,7 +91,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 }
 
 const getRecipe = `-- name: GetRecipe :one
-SELECT id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit FROM public.recipes
+SELECT id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id FROM public.recipes
 WHERE id = $1 LIMIT 1
 `
 
@@ -106,6 +109,7 @@ func (q *Queries) GetRecipe(ctx context.Context, id int64) (Recipe, error) {
 		&i.WaterUnit,
 		&i.WaterTemp,
 		&i.WaterTempUnit,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -131,7 +135,7 @@ func (q *Queries) GetUserById(ctx context.Context, id int32) (User, error) {
 }
 
 const getUserRecipes = `-- name: GetUserRecipes :many
-SELECT id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id, recipe_id, created_at FROM public.recipes
+SELECT id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, recipes.user_id, saved_recipes.user_id, recipe_id, created_at FROM public.recipes
 JOIN public.saved_recipes ON public.recipes.id = public.saved_recipes.recipe_id
 WHERE public.saved_recipes.user_id = $1
 `
@@ -148,6 +152,7 @@ type GetUserRecipesRow struct {
 	WaterTemp     sql.NullFloat64 `json:"water_temp"`
 	WaterTempUnit sql.NullString  `json:"water_temp_unit"`
 	UserID        int32           `json:"user_id"`
+	UserID_2      int32           `json:"user_id_2"`
 	RecipeID      int32           `json:"recipe_id"`
 	CreatedAt     time.Time       `json:"created_at"`
 }
@@ -173,6 +178,7 @@ func (q *Queries) GetUserRecipes(ctx context.Context, userID int32) ([]GetUserRe
 			&i.WaterTemp,
 			&i.WaterTempUnit,
 			&i.UserID,
+			&i.UserID_2,
 			&i.RecipeID,
 			&i.CreatedAt,
 		); err != nil {
@@ -190,7 +196,7 @@ func (q *Queries) GetUserRecipes(ctx context.Context, userID int32) ([]GetUserRe
 }
 
 const listRecipes = `-- name: ListRecipes :many
-SELECT id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit FROM public.recipes
+SELECT id, recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id FROM public.recipes
 ORDER BY brew_method
 `
 
@@ -214,6 +220,7 @@ func (q *Queries) ListRecipes(ctx context.Context) ([]Recipe, error) {
 			&i.WaterUnit,
 			&i.WaterTemp,
 			&i.WaterTempUnit,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}

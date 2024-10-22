@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"embed"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
@@ -40,6 +42,61 @@ func NewDB(t *testing.T) *sql.DB {
 
 	var migrator pgtestdb.Migrator = gm
 	return pgtestdb.New(t, conf, migrator)
+}
+
+func TestHandleCreateRecipe(t *testing.T) {
+	ctx := context.Background()
+	log := zap.NewExample(zap.Development()).Sugar()
+
+	t.Run("ok", func(t *testing.T) {
+		t.Parallel()
+		db := NewDB(t)
+		defer db.Close()
+
+		psMock := &PubSubMock{
+			PublishFunc: func(topic string, data []byte) error {
+				return nil
+			},
+		}
+		cacheMock := &cache.RecipeCacherMock{}
+
+		s := newServer(log, psMock, cacheMock)
+		s.queries = postgres.New(db)
+
+		// create a user
+		_, err := s.queries.CreateUser(ctx, postgres.CreateUserParams{
+			Name:         "test user",
+			Email:        "user@email.com",
+			PasswordHash: []byte("password"),
+		})
+		require.NoError(t, err)
+
+		// create a recipe
+		w := httptest.NewRecorder()
+
+		payload, err := os.ReadFile("testdata/create_recipe.json")
+		require.NoError(t, err)
+
+		r := httptest.NewRequest(http.MethodPost, "/v1/recipes", bytes.NewReader(payload))
+		s.ServeHTTP(w, r)
+
+		require.Equal(t, http.StatusCreated, w.Code)
+
+		var got postgres.Recipe
+		require.NoError(t, json.NewDecoder(w.Body).Decode(&got))
+		want := postgres.Recipe{
+			ID:           1,
+			RecipeName:   "sample",
+			BrewMethod:   postgres.BrewMethodChemex,
+			WeightUnit:   postgres.WeightUnitG,
+			GrindSize:    21,
+			WaterWeight:  500,
+			WaterUnit:    "g",
+			CoffeeWeight: 20,
+			UserID:       1,
+		}
+		require.Equal(t, want, got)
+	})
 }
 
 func TestHandleGetRecipe(t *testing.T) {
