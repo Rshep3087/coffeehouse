@@ -13,7 +13,7 @@ require (
 	github.com/peterbourgon/ff/v3 v3.1.2
 	github.com/peterldowns/pgtestdb v0.0.15
 	github.com/peterldowns/pgtestdb/migrators/golangmigrator v0.0.15
-	github.com/redis/go-redis/v9 v9.6.1
+	github.com/redis/go-redis/v9 v9.7.0
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.56.0
 	go.opentelemetry.io/otel v1.31.0
@@ -22,7 +22,11 @@ require (
 	golang.org/x/crypto v0.28.0
 )
 
-require go.nhat.io/otelsql v0.14.0 // indirect
+require (
+	github.com/redis/go-redis/extra/rediscmd/v9 v9.7.0 // indirect
+	github.com/redis/go-redis/extra/redisotel/v9 v9.7.0 // indirect
+	go.nhat.io/otelsql v0.14.0 // indirect
+)
 
 require (
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect

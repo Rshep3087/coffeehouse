@@ -11,6 +11,7 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/peterbourgon/ff/v3"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	redisClient "github.com/redis/go-redis/v9"
 	"github.com/rshep3087/coffeehouse/cache/redis"
 	"github.com/rshep3087/coffeehouse/database"
@@ -98,6 +99,10 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// setup server
 	rc := redisClient.NewClient(&redisClient.Options{Addr: *redisURL})
+
+	if err := redisotel.InstrumentTracing(rc); err != nil {
+		return fmt.Errorf("instrumenting redis: %w", err)
+	}
 
 	s := web.NewServer(log, nc, redis.New(rc))
 
