@@ -5,6 +5,7 @@ data:
   COFFEEHOUSE_DB_TLS: "true"
   COFFEEHOUSE_LISTEN_ADDR: 0.0.0.0:8080
   COFFEEHOUSE_NATS_URL: nats://nats:4222
+  COFFEEHOUSE_OTEL_COLLECTOR: otel-collector:4317
   COFFEEHOUSE_REDIS_URL: redis:6379
 kind: ConfigMap
 metadata:
