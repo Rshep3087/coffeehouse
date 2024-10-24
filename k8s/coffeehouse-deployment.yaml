@@ -52,6 +52,11 @@ spec:
                 configMapKeyRef:
                   key: COFFEEHOUSE_REDIS_URL
                   name: docker-env
+            - name: COFFEEHOUSE_OTEL_COLLECTOR
+              valueFrom:
+                configMapKeyRef:
+                  key: COFFEEHOUSE_OTEL_COLLECTOR
+                  name: docker-env
           image: ghcr.io/rshep3087/coffeehouse:latest
           livenessProbe:
             httpGet:

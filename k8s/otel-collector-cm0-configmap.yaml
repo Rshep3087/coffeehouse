@@ -1,0 +1,43 @@
+apiVersion: v1
+data:
+  otel-collector.yaml: |-
+    # Copyright The OpenTelemetry Authors
+    # SPDX-License-Identifier: Apache-2.0
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+    processors:
+    extensions:
+      health_check: {}
+    exporters:
+      otlp:
+        endpoint: jaeger:4317
+        tls:
+          insecure: true
+      prometheus:
+        endpoint: 0.0.0.0:9090
+        namespace: testapp
+      debug:
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [otlp, debug]
+
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [prometheus, debug]
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: otel-collector
+  name: otel-collector-cm0
