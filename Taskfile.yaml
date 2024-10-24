@@ -26,7 +26,7 @@ tasks:
       - docker compose up -d db
       - sleep 3 # wait for the database to start
       - task: db:migrate
-      - docker compose up --build -d coffeehouse nats redis
+      - docker compose up --build -d coffeehouse nats redis jaeger otel-collector
       - sleep 1
       - docker logs --follow coffeehouse-coffeehouse-1
 

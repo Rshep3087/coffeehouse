@@ -2,9 +2,12 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"net/url"
 
 	_ "github.com/lib/pq"
+	"go.nhat.io/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // Config is the required properties to use the database.
@@ -37,14 +40,25 @@ func Open(cfg Config) (*sql.DB, error) {
 		RawQuery: q.Encode(),
 	}
 
-	db, err := sql.Open("postgres", u.String())
+	driveName, err := otelsql.Register("postgres",
+		otelsql.AllowRoot(),
+		otelsql.TraceQueryWithArgs(),
+		otelsql.TraceRowsClose(),
+		otelsql.WithDatabaseName(cfg.Name),
+		otelsql.WithSystem(semconv.DBSystemPostgreSQL),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("registering otelsql driver: %w", err)
+	}
+
+	db, err := sql.Open(driveName, u.String())
+	if err != nil {
+		return nil, fmt.Errorf("opening database connection: %w", err)
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("pinging database: %w", err)
 	}
 
 	return db, nil

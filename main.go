@@ -17,7 +17,15 @@ import (
 	"github.com/rshep3087/coffeehouse/logger"
 	"github.com/rshep3087/coffeehouse/postgres"
 	"github.com/rshep3087/coffeehouse/web"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -45,14 +53,15 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	// configuration
 	fs := flag.NewFlagSet("coffeehouse", flag.ContinueOnError)
 	var (
-		listenAddr = fs.String("listen-addr", "localhost:8080", "listen address")
-		dbUser     = fs.String("db-user", "user", "database user")
-		dbPassword = fs.String("db-password", "", "database password")
-		dbHost     = fs.String("db-host", "localhost:5432", "database host")
-		dbName     = fs.String("db-name", "coffeehousedb", "database name")
-		dbTLS      = fs.Bool("db-tls", false, "diable TLS")
-		natsURL    = fs.String("nats-url", nats.DefaultURL, "nats url")
-		redisURL   = fs.String("redis-url", "localhost:6379", "redis url")
+		listenAddr    = fs.String("listen-addr", "localhost:8080", "listen address")
+		dbUser        = fs.String("db-user", "user", "database user")
+		dbPassword    = fs.String("db-password", "", "database password")
+		dbHost        = fs.String("db-host", "localhost:5432", "database host")
+		dbName        = fs.String("db-name", "coffeehousedb", "database name")
+		dbTLS         = fs.Bool("db-tls", false, "diable TLS")
+		natsURL       = fs.String("nats-url", nats.DefaultURL, "nats url")
+		redisURL      = fs.String("redis-url", "localhost:6379", "redis url")
+		otelCollector = fs.String("otel-collector", "localhost:4317", "otel collector address")
 	)
 	if err := ff.Parse(fs, args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
 		return fmt.Errorf("config parse: %w", err)
@@ -60,13 +69,14 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 
 	// print config
 	log.Infof(
-		"listen addr %s, db name %s, db host %s, disable tls %t nats url %s redis url %s",
+		"listen addr %s, db name %s, db host %s, disable tls %t nats url %s redis url %s, otel collector %s",
 		*listenAddr,
 		*dbName,
 		*dbHost,
 		*dbTLS,
 		*natsURL,
 		*redisURL,
+		*otelCollector,
 	)
 
 	nc, err := nats.Connect(*natsURL)
@@ -74,6 +84,16 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 		return fmt.Errorf("nats connect: %w", err)
 	}
 	defer nc.Close()
+
+	shutdown, err := initTracer(*otelCollector)
+	if err != nil {
+		return fmt.Errorf("initTracer: %w", err)
+	}
+	defer func() {
+		if err := shutdown(ctx); err != nil {
+			log.Errorw("shutdown", "ERROR", err)
+		}
+	}()
 
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// setup server
@@ -133,4 +153,34 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	}
 
 	return nil
+}
+
+func initTracer(target string) (func(context.Context) error, error) {
+	ctx := context.Background()
+
+	res, err := resource.New(ctx, resource.WithAttributes(semconv.ServiceName("coffeehouse")))
+	if err != nil {
+		return nil, fmt.Errorf("constructing new resource: %w", err)
+	}
+
+	conn, err := grpc.NewClient(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("grpc new client: %w", err)
+	}
+
+	exp, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+	if err != nil {
+		return nil, fmt.Errorf("constructing new exporter: %w", err)
+	}
+
+	bsp := sdktrace.NewBatchSpanProcessor(exp)
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSpanProcessor(bsp),
+		sdktrace.WithResource(res),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+	)
+	otel.SetTracerProvider(tp)
+
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+	return tp.Shutdown, nil
 }
