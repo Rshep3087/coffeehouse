@@ -9,6 +9,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rshep3087/coffeehouse/postgres"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,16 +19,16 @@ func (s *server) routes() {
 	s.router.HandlerFunc(http.MethodGet, "/health", s.health())
 
 	// Recipe routes
-	s.router.HandlerFunc(http.MethodPost, "/v1/recipes", loggingmw(s.log, s.handleCreateRecipe()))
-	s.router.HandlerFunc(http.MethodGet, "/v1/recipes/:id", loggingmw(s.log, s.handleGetRecipe()))
-	s.router.HandlerFunc(http.MethodGet, "/v1/recipes", loggingmw(s.log, s.handleGetRecipes()))
+	s.router.Handler(http.MethodPost, "/v1/recipes", otelhttp.NewHandler(loggingmw(s.log, s.handleCreateRecipe()), "/v1/recipes"))
+	s.router.Handler(http.MethodGet, "/v1/recipes/:id", otelhttp.NewHandler(loggingmw(s.log, s.handleGetRecipe()), "/v1/recipes/:id"))
+	s.router.Handler(http.MethodGet, "/v1/recipes", otelhttp.NewHandler(loggingmw(s.log, s.handleGetRecipes()), "/v1/recipes"))
 
 	// User routes
-	s.router.HandlerFunc(http.MethodPost, "/v1/users", loggingmw(s.log, s.handleCreateUser()))
-	s.router.HandlerFunc(http.MethodGet, "/v1/users/:id", loggingmw(s.log, s.handleGetUser()))
+	s.router.Handler(http.MethodPost, "/v1/users", otelhttp.NewHandler(loggingmw(s.log, s.handleCreateUser()), "/v1/users"))
+	s.router.Handler(http.MethodGet, "/v1/users/:id", otelhttp.NewHandler(loggingmw(s.log, s.handleGetUser()), "/v1/users/:id"))
 
 	// User recipe routes
-	s.router.HandlerFunc(http.MethodPost, "/v1/save-recipe", loggingmw(s.log, s.handleSaveRecipe()))
+	s.router.Handler(http.MethodPost, "/v1/save-recipe", otelhttp.NewHandler(loggingmw(s.log, s.handleSaveRecipe()), "/v1/save-recipe"))
 }
 
 func (s *server) health() http.HandlerFunc {
@@ -52,6 +54,8 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 
 		log.Info("adding recipe")
 
+		_, span := otel.Tracer("coffeehouse").Start(r.Context(), "add recipe")
+		defer span.End()
 		newRecipe, err := s.Queries.CreateRecipe(r.Context(), recip)
 		if err != nil {
 			log.Error(err)
