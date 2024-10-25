@@ -56,8 +56,13 @@ func TestHandleCreateRecipe(t *testing.T) {
 			},
 		}
 		cacheMock := &cache.RecipeCacherMock{}
+		coffeeImageProviderMock := &CoffeeImageProviderMock{
+			GetImageURLFunc: func(ctx context.Context) string {
+				return "http://example.com/image.jpg"
+			},
+		}
 
-		s := NewServer(log, psMock, cacheMock)
+		s := NewServer(log, psMock, cacheMock, coffeeImageProviderMock)
 		s.Queries = postgres.New(db)
 
 		// create a user
@@ -105,7 +110,6 @@ func TestHandleGetRecipe(t *testing.T) {
 		db := NewDB(t)
 		defer db.Close()
 
-		psMock := &PubSubMock{}
 		cacheMock := &cache.RecipeCacherMock{
 			GetRecipeFunc: func(ctx context.Context, id int64) (*postgres.Recipe, error) {
 				return nil, cache.ErrCacheMiss
@@ -115,7 +119,7 @@ func TestHandleGetRecipe(t *testing.T) {
 			},
 		}
 
-		s := NewServer(log, psMock, cacheMock)
+		s := NewServer(log, &PubSubMock{}, cacheMock, &CoffeeImageProviderMock{})
 		s.Queries = postgres.New(db)
 
 		_, err := s.Queries.CreateUser(ctx, postgres.CreateUserParams{

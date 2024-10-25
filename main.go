@@ -14,6 +14,7 @@ import (
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	redisClient "github.com/redis/go-redis/v9"
 	"github.com/rshep3087/coffeehouse/cache/redis"
+	"github.com/rshep3087/coffeehouse/coffeeimageapi"
 	"github.com/rshep3087/coffeehouse/database"
 	"github.com/rshep3087/coffeehouse/logger"
 	"github.com/rshep3087/coffeehouse/postgres"
@@ -54,15 +55,16 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 	// configuration
 	fs := flag.NewFlagSet("coffeehouse", flag.ContinueOnError)
 	var (
-		listenAddr    = fs.String("listen-addr", "localhost:8080", "listen address")
-		dbUser        = fs.String("db-user", "user", "database user")
-		dbPassword    = fs.String("db-password", "", "database password")
-		dbHost        = fs.String("db-host", "localhost:5432", "database host")
-		dbName        = fs.String("db-name", "coffeehousedb", "database name")
-		dbTLS         = fs.Bool("db-tls", false, "diable TLS")
-		natsURL       = fs.String("nats-url", nats.DefaultURL, "nats url")
-		redisURL      = fs.String("redis-url", "localhost:6379", "redis url")
-		otelCollector = fs.String("otel-collector", "localhost:4317", "otel collector address")
+		listenAddr     = fs.String("listen-addr", "localhost:8080", "listen address")
+		dbUser         = fs.String("db-user", "user", "database user")
+		dbPassword     = fs.String("db-password", "", "database password")
+		dbHost         = fs.String("db-host", "localhost:5432", "database host")
+		dbName         = fs.String("db-name", "coffeehousedb", "database name")
+		dbTLS          = fs.Bool("db-tls", false, "diable TLS")
+		natsURL        = fs.String("nats-url", nats.DefaultURL, "nats url")
+		redisURL       = fs.String("redis-url", "localhost:6379", "redis url")
+		otelCollector  = fs.String("otel-collector", "localhost:4317", "otel collector address")
+		coffeeImageURL = fs.String("coffee-image-url", "https://coffee.alexflipnote.dev", "coffee image url")
 	)
 	if err := ff.Parse(fs, args[1:], ff.WithEnvVarPrefix("COFFEEHOUSE")); err != nil {
 		return fmt.Errorf("config parse: %w", err)
@@ -96,6 +98,8 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 		}
 	}()
 
+	coffeeImageProvider := coffeeimageapi.NewClient(*coffeeImageURL)
+
 	// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// setup server
 	rc := redisClient.NewClient(&redisClient.Options{Addr: *redisURL})
@@ -104,7 +108,7 @@ func run(ctx context.Context, args []string, log *zap.SugaredLogger) error {
 		return fmt.Errorf("instrumenting redis: %w", err)
 	}
 
-	s := web.NewServer(log, nc, redis.New(rc))
+	s := web.NewServer(log, nc, redis.New(rc), coffeeImageProvider)
 
 	db, err := database.Open(database.Config{
 		User:       *dbUser,

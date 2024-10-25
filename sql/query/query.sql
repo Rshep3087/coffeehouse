@@ -8,9 +8,9 @@ ORDER BY brew_method;
 
 -- name: CreateRecipe :one
 INSERT INTO public.recipes (
-    recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id
+    recipe_name, brew_method, coffee_weight, weight_unit, grind_size, water_weight, water_unit, water_temp, water_temp_unit, user_id, image_url
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 )
 RETURNING *;
 

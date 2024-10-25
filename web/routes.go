@@ -1,6 +1,8 @@
 package web
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,7 +12,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rshep3087/coffeehouse/postgres"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,6 +38,14 @@ func (s *server) health() http.HandlerFunc {
 	}
 }
 
+// CoffeeImageProvider gets a URL for a random coffee image
+//
+//go:generate moq -out coffee_image_provider_moq_test.go . CoffeeImageProvider
+type CoffeeImageProvider interface {
+	// GetImageURL returns a URL for a random coffee image
+	GetImageURL(ctx context.Context) string
+}
+
 func (s *server) handleCreateRecipe() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		recip, err := decode[postgres.CreateRecipeParams](r)
@@ -52,10 +61,17 @@ func (s *server) handleCreateRecipe() http.HandlerFunc {
 			"user_id", recip.UserID,
 		)
 
+		log.Info("getting random coffee image")
+		imageURL := s.coffeeImageProvider.GetImageURL(r.Context())
+		if imageURL == "" {
+			log.Error("error getting coffee image")
+		} else {
+			log.Info("got random coffee image", "url", imageURL)
+			recip.ImageUrl = sql.NullString{String: imageURL, Valid: true}
+		}
+
 		log.Info("adding recipe")
 
-		_, span := otel.Tracer("coffeehouse").Start(r.Context(), "add recipe")
-		defer span.End()
 		newRecipe, err := s.Queries.CreateRecipe(r.Context(), recip)
 		if err != nil {
 			log.Error(err)
