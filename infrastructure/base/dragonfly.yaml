@@ -8,8 +8,12 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: oci://ghcr.io/dragonflydb/dragonfly/helm/dragonfly
+      chart: dragonfly
       version: "v1.22.x"
+      sourceRef:
+        kind: OCIRepository
+        name: dragonfly
+        namespace: flux-system
   values:
     replicaCount: 1
 

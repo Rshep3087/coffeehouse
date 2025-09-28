@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - helm-repositories.yaml
+  - dragonfly-oci-source.yaml
   - postgres-secret.yaml
   - cloudnative-pg.yaml
   - dragonfly.yaml
