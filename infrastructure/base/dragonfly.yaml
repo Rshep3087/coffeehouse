@@ -1,0 +1,42 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: dragonfly-operator
+  namespace: dragonfly-system
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: dragonfly-operator
+      version: "v1.1.x"
+      sourceRef:
+        kind: HelmRepository
+        name: dragonflydb
+        namespace: flux-system
+  values:
+    # Dragonfly operator configuration
+    replicaCount: 1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dragonfly-system
+---
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  name: coffeehouse-dragonfly
+  namespace: default
+spec:
+  replicas: 1
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  args:
+    - --maxmemory=256mb
+    - --default_lua_flags=allow-undeclared-keys
