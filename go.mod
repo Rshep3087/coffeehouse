@@ -14,7 +14,7 @@ require (
 	github.com/peterldowns/pgtestdb v0.0.15
 	github.com/peterldowns/pgtestdb/migrators/golangmigrator v0.0.15
 	github.com/redis/go-redis/v9 v9.7.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.56.0
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/sdk v1.31.0
