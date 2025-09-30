@@ -63,4 +63,4 @@ tasks:
       COFFEEHOUSE_DB_USER: user
       COFFEEHOUSE_DB_PASSWORD: password
     cmds:
-      - go run . --db-tls false
+      - go run ./cmd/server --db-tls false
