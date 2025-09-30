@@ -3,7 +3,7 @@ module github.com/rshep3087/coffeehouse
 go 1.23
 
 require (
-	github.com/alicebob/miniredis/v2 v2.33.0
+	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.1.1
 	github.com/charmbracelet/lipgloss v0.13.0
@@ -20,12 +20,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.31.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.28.0
-)
-
-require (
-	github.com/redis/go-redis/extra/rediscmd/v9 v9.7.0 // indirect
-	github.com/redis/go-redis/extra/redisotel/v9 v9.7.0 // indirect
-	go.nhat.io/otelsql v0.14.0 // indirect
 )
 
 require (
@@ -57,8 +51,11 @@ require (
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/redis/go-redis/extra/rediscmd/v9 v9.7.0 // indirect
+	github.com/redis/go-redis/extra/redisotel/v9 v9.7.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
+	go.nhat.io/otelsql v0.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.31.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.31.0
 	go.opentelemetry.io/otel/metric v1.31.0 // indirect
